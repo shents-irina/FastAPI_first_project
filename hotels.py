@@ -4,9 +4,13 @@ from schemas.hotels import Hotel, HotelPatch
 router = APIRouter(prefix='/hotels', tags=['Отели'])
 
 hotels = [
-    {"id": 1, "title": "Sochi1", "name": "sochi"},
-    {"id": 2, "title": "Dubai", "name": "dubai"},
-    {"id": 3, "title": "Sochi", "name": "sochi_"},
+    {"id": 1, "title": "Сочи", "name": "sochi"},
+    {"id": 2, "title": "Дубай", "name": "dubai"},
+    {"id": 3, "title": "Мальдивы", "name": "maldives"},
+    {"id": 4, "title": "Геленджик", "name": "gelendzhik"},
+    {"id": 5, "title": "Москва", "name": "moscow"},
+    {"id": 6, "title": "Казань", "name": "kazan"},
+    {"id": 7, "title": "Санкт-Петербург", "name": "saint-petersburg"},
 ]
 
 
@@ -14,10 +18,19 @@ hotels = [
 def get_hotels(
     id: int | None = Query(default=None, description="айдишник"),
     title: str | None = Query(default=None, description="название отеля"),
+    page: int = Query(default=1, ge=1),
+    per_page: int = Query(default=3, ge=1, le=30)
 ):
-    if not id and not title:
-        return hotels
-    return [hotel for hotel in hotels if hotel["id"] == id or hotel["title"] == title]
+    hotels_ = []
+    for hotel in hotels:
+        if id and id != hotel["id"]:
+            continue
+        if title and title != hotel["title"]:
+            continue
+        hotels_.append(hotel)
+
+    return hotels_[(page - 1) * per_page:per_page * page]
+
 
 
 @router.delete(path="/{hotel_id}", summary="Удаление данных отеля")
@@ -32,7 +45,14 @@ def delete_hotels(hotel_id: int):
     summary="Регистрирует новый отель",
     description="Довавляет данные нового отеля",
 )
-def create_hotel(hotel_data: Hotel):
+def create_hotel(
+    hotel_data: Hotel = Body(
+        openapi_examples={
+            "1": {"summary": "Сочи", "value": {"title": "Отель Сочи у моря", "name": "sochi_sea"}},
+            "2": {"summary": "Дубай", "value": {"title": "Отель Дубай у фонтана", "name": "dubai_fountain"}}
+        }
+    )
+):
     global hotels
     hotels.append(
         {
