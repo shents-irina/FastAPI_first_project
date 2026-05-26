@@ -9,7 +9,7 @@ from database import Base
 from config import settings
 from models.hotels import HotelsORM
 from models.rooms import RoomsORM
-from models.users import Users
+from models.users import UsersORM
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
