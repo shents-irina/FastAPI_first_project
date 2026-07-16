@@ -13,20 +13,20 @@ router = APIRouter(prefix='/hotels', tags=['Отели'])
 async def get_hotels(
     pagination: PaginationDep,
     db: DBDep,
+    date_from: date = Query(openapi_examples={"example1": {"summary": "Пример даты заезда", "value": "2026-07-07"}}),
+    date_to: date = Query(openapi_examples={"example1": {"summary": "Пример даты выезда", "value": "2026-08-12"}}),
     title: str | None = Query(default=None, description="Название отеля"),
     location: str | None = Query(default=None, description="Местоположение отеля"),
-    date_from: date = Query(openapi_examples={"example1": {"summary": "Пример даты заезда", "value": "2026-07-07"}}),
-    date_to: date = Query(openapi_examples={"example1": {"summary": "Пример даты выезда", "value": "2026-08-12"}
-}),
 ):
-    # per_page = pagination.per_page or 5
-    # return await db.hotels.get_all(
-    #     title,
-    #     location,
-    #     offset=(pagination.page - 1) * per_page,
-    #     limit=per_page
-    # )
-    return await db.hotels.get_filtered_by_time(date_from=date_from, date_to=date_to)
+    per_page = pagination.per_page or 5
+    return await db.hotels.get_filtered_by_time(
+        date_from=date_from,
+        date_to=date_to,
+        title=title,
+        location=location,
+        offset=(pagination.page - 1) * per_page,
+        limit=per_page,
+    )
 
 
 @router.get(
