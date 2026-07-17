@@ -11,6 +11,7 @@ from models.hotels import HotelsORM
 from models.rooms import RoomsORM
 from models.users import UsersORM
 from models.bookings import BookingsORM
+from models.facilities import FacilitiesORM
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
