@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from sqlalchemy import delete, insert, select
 
 from models.facilities import FacilitiesORM, RoomsFacilitiesORM
 from repositories.base import BaseRepository
@@ -14,15 +15,29 @@ class RoomsFacilitiesRepository(BaseRepository):
     model = RoomsFacilitiesORM
     schema = RoomFacility
 
-    async def edit_facilities(self, room_data: BaseModel, room_id: int):
-        room_facilities_data = await self.get_filtered(room_id=room_id)   # список удобств, которые привязаны к room_id
-        exist_f_ids = {data.facility_id for data in room_facilities_data}   # множество айдишников удобств, которые есть в базе
-        query_f_ids = set(room_data.facilities_ids)  # превращаем данные из запроса в set
+    async def set_room_facilities(self, room_id: int, facilities_ids: list[int]) -> None:
+        get_current_facilities_ids_query = (
+            select(self.model.facility_id)
+            .filter_by(room_id=room_id)
+        )
+        result = await self.session.execute(get_current_facilities_ids_query)
+        current_facilities_ids: list[int] = result.scalars().all()
+        ids_to_delete: list[int] = list(set(current_facilities_ids) - set(facilities_ids))
+        ids_to_insert: list[int] = list(set(facilities_ids) - set(current_facilities_ids))
 
-        new_f_ids_for_add = query_f_ids - exist_f_ids   # то, что нужно вставить
-        f_ids_for_delete = exist_f_ids - query_f_ids   # то, что нужно удалить
+        if ids_to_delete:
+            delete_m2m_facilities_stmt = (
+                delete(self.model)
+                .filter(
+                    self.model.room_id == room_id,
+                    self.model.facility_id.in_(ids_to_delete)
+                )
+            )
+            await self.session.execute(delete_m2m_facilities_stmt)
 
-        if new_f_ids_for_add:
-            new_rooms_facilities_data = [RoomFacilityAdd(room_id=room_id, facility_id=f_id) for f_id in new_f_ids_for_add]   # новые схемы, которые нужно добавить в базу
-            await self.add_bulk(new_rooms_facilities_data)
-        await self.delete(RoomsFacilitiesORM.facility_id.in_(f_ids_for_delete), room_id=room_id)
+        if ids_to_insert:
+            insert_m2m_facilities_stmt = (
+                insert(self.model)
+                .values([{"room_id": room_id, "facility_id": f_id} for f_id in ids_to_insert])
+            )
+            await self.session.execute(insert_m2m_facilities_stmt)
