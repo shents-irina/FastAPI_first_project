@@ -2,7 +2,7 @@ from datetime import date
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
 
@@ -16,6 +16,9 @@ class BookingsORM(Base):
     date_from: Mapped[date]
     date_to: Mapped[date]
     price: Mapped[int]
+
+    user: Mapped["UsersORM"] = relationship()
+    room: Mapped["RoomsORM"] = relationship()
 
     @hybrid_property
     def total_cost(self) -> int:

@@ -1,5 +1,19 @@
+# Виртуальные окружения Python
 venv
+.venv
+
+# Настройки IDE
 .idea
-__pycache__
-.env
 .vscode/
+
+# Скомпилированный код Python
+__pycache__
+
+# Секреты и переменные окружения
+.env
+
+# Служебные файлы macOS Finder
+.DS_Store
+
+# Локальное состояние расписания Celery Beat
+celerybeat-schedule*
