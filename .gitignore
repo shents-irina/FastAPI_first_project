@@ -11,6 +11,7 @@ __pycache__
 
 # Секреты и переменные окружения
 .env
+.env-test
 
 # Служебные файлы macOS Finder
 .DS_Store
