@@ -1,4 +1,5 @@
 import json
+from typing import AsyncGenerator
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -18,7 +19,7 @@ def check_test_mode():
 
 
 @pytest.fixture(scope="function")
-async def db() -> DBManager:
+async def db() -> AsyncGenerator[DBManager, None]:
     async with DBManager(session_factory=async_session_maker_null_pool) as db:
         yield db
 
@@ -41,7 +42,7 @@ async def setup_database(check_test_mode):
 
 
 @pytest.fixture(scope="session")
-async def ac() -> AsyncClient:
+async def ac() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
