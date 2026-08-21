@@ -4,6 +4,7 @@ from typing import AsyncGenerator
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from api.dependencies import get_db
 from config import settings
 from database import Base, engine_null_pool, async_session_maker_null_pool
 from main import app
@@ -13,6 +14,14 @@ from schemas.rooms import RoomAdd
 from utils.db_manager import DBManager
 
 
+async def get_db_null_pool():
+    async with DBManager(session_factory=async_session_maker_null_pool) as db:
+        yield db
+
+
+app.dependency_overrides[get_db] = get_db_null_pool
+
+
 @pytest.fixture(scope="session", autouse=True)
 def check_test_mode():
     assert settings.MODE == "TEST"
@@ -20,7 +29,7 @@ def check_test_mode():
 
 @pytest.fixture(scope="function")
 async def db() -> AsyncGenerator[DBManager, None]:
-    async with DBManager(session_factory=async_session_maker_null_pool) as db:
+    async for db in get_db_null_pool():
         yield db
 
 
