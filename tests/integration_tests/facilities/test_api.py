@@ -10,7 +10,6 @@ async def test_add_facility(ac):
         "/facilities",
         json={"title": facility_title},
     )
-    print(f"{response.json()=}")
     assert response.status_code == 200
     res = response.json()
     assert isinstance(res, dict)
