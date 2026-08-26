@@ -39,8 +39,6 @@ def rooms_ids_for_booking(
     if hotel_id is not None:
         rooms_ids_for_hotel =  rooms_ids_for_hotel.filter_by(hotel_id=hotel_id)
 
-    rooms_ids_for_hotel = rooms_ids_for_hotel.subquery(name="rooms_ids_for_hotel")
-
     rooms_ids_to_get = (
         select(rooms_left_data.c.room_id)
         .select_from(rooms_left_data)
