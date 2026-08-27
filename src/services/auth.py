@@ -21,7 +21,7 @@ class AuthService:
         return self.pwd_context.verify(plain_password, hashed_password)
 
     def hash_password(self, password: str) -> str:
-        return self.pwd_context.hash( password)
+        return self.pwd_context.hash(password)
 
     def decode_token(self, token: str) -> dict:
         try:
