@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -23,7 +23,7 @@ class BookingsRepository(BaseRepository):
                 joinedload(BookingsORM.user),
                 joinedload(BookingsORM.room).joinedload(RoomsORM.hotel),
             )
-            .filter(BookingsORM.date_from == date.today())
+            .filter(BookingsORM.date_from == datetime.now(tz=timezone.utc).date())
         )
         res = await self.session.execute(query)
         return res.scalars().unique().all()

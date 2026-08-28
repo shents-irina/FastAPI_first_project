@@ -1,17 +1,15 @@
 import pytest
 
-from database import async_session_maker_null_pool
 from tests.conftest import get_db_null_pool
-from utils.db_manager import DBManager
 
 
 @pytest.mark.parametrize("room_id, date_from, date_to, status_code", [
     (1, "2026-08-01", "2026-08-05", 200),
-    (1, "2026-08-01", "2026-08-05", 200),
+    (1, "2026-08-02", "2026-08-05", 200),
     (1, "2026-08-01", "2026-08-04", 200),
     (1, "2026-08-01", "2026-08-03", 200),
     (1, "2026-08-01", "2026-08-02", 200),
-    (1, "2026-08-01", "2026-08-05", 409),
+    (1, "2026-08-03", "2026-08-05", 409),
     (1, "2026-08-05", "2026-08-10", 200),
 ])
 async def test_add_booking(db, authenticated_ac, room_id, date_from, date_to, status_code):

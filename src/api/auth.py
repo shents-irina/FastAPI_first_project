@@ -1,11 +1,8 @@
 from fastapi import APIRouter, HTTPException, Response
 
 from api.dependencies import DBDep, UserIdDep
-from database import async_session_maker
-from repositories.users import UsersRepository
 from schemas.users import UserAdd, UserRequestAdd
 from services.auth import AuthService
-
 
 router = APIRouter(prefix="/auth", tags=["Аутентификация и авторизация"])
 

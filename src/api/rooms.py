@@ -7,7 +7,6 @@ from api.dependencies import DBDep
 from schemas.facilities import RoomFacilityAdd
 from schemas.rooms import RoomAdd, RoomAddRequest, RoomPatch, RoomPatchRequest
 
-
 router = APIRouter(prefix="/hotels", tags=["Номера"])
 
 

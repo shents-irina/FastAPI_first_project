@@ -1,7 +1,5 @@
 import pytest
 
-from services.auth import AuthService
-
 
 @pytest.mark.parametrize("email, password, status_code", [
     ("kot1@pes.com", "1234", 200),

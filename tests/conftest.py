@@ -1,5 +1,5 @@
 import json
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from unittest import mock
 
 mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 
 from api.dependencies import get_db
 from config import settings
-from database import Base, engine_null_pool, async_session_maker_null_pool
+from database import Base, async_session_maker_null_pool, engine_null_pool
 from main import app
 from models import *
 from schemas.hotels import HotelAdd
@@ -42,9 +42,9 @@ async def setup_database(check_test_mode):
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-    with open("tests/mock_hotels.json", "r", encoding="utf-8") as json_hotels:
+    with open("tests/mock_hotels.json", "r", encoding="utf-8") as json_hotels:  # noqa: ASYNC230
         hotels_data = json.load(json_hotels)
-    with open("tests/mock_rooms.json", "r", encoding="utf-8") as json_rooms:
+    with open("tests/mock_rooms.json", "r", encoding="utf-8") as json_rooms:  # noqa: ASYNC230
         rooms_data = json.load(json_rooms)
 
     async with DBManager(session_factory=async_session_maker_null_pool) as db_:
@@ -72,7 +72,7 @@ async def register_user(setup_database, ac):
 
 @pytest.fixture(scope="session")
 async def authenticated_ac(register_user, ac):
-    res = await ac.post(
+    await ac.post(
         url="/auth/login",
         json={
             "email": "kot@pes.com",

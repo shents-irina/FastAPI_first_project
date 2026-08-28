@@ -1,10 +1,14 @@
 from datetime import date
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+
+if TYPE_CHECKING:
+    from models import RoomsORM, UsersORM
 
 
 class BookingsORM(Base):

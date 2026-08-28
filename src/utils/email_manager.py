@@ -1,11 +1,12 @@
 import smtplib
 from email.message import EmailMessage
+from typing import Self
 
 from config import settings
 
 
 class EmailManager:
-    def __enter__(self) -> "EmailManager":
+    def __enter__(self) -> Self:
         self._server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT)
         self._server.login(settings.SMTP_USER, settings.SMTP_PASS)
         return self

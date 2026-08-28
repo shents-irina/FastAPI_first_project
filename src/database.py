@@ -4,7 +4,6 @@ from sqlalchemy.orm import DeclarativeBase
 
 from config import settings
 
-
 engine = create_async_engine(url=settings.DB_URL)
 engine_null_pool = create_async_engine(url=settings.DB_URL, poolclass=NullPool)
 
