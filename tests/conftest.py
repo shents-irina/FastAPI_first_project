@@ -31,7 +31,7 @@ def check_test_mode():
 
 
 @pytest.fixture(scope="function")
-async def db() -> AsyncGenerator[DBManager, None]:
+async def db() -> AsyncGenerator[DBManager]:
     async for db in get_db_null_pool():
         yield db
 
@@ -54,30 +54,18 @@ async def setup_database(check_test_mode):
 
 
 @pytest.fixture(scope="session")
-async def ac() -> AsyncGenerator[AsyncClient, None]:
+async def ac() -> AsyncGenerator[AsyncClient]:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 
 @pytest.fixture(scope="session", autouse=True)
 async def register_user(setup_database, ac):
-    await ac.post(
-        url="/auth/register",
-        json={
-            "email": "kot@pes.com",
-            "password": "1234"
-        }
-    )
+    await ac.post(url="/auth/register", json={"email": "kot@pes.com", "password": "1234"})
 
 
 @pytest.fixture(scope="session")
 async def authenticated_ac(register_user, ac):
-    await ac.post(
-        url="/auth/login",
-        json={
-            "email": "kot@pes.com",
-            "password": "1234"
-        }
-    )
+    await ac.post(url="/auth/login", json={"email": "kot@pes.com", "password": "1234"})
     assert ac.cookies["access_token"]
     yield ac

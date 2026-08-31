@@ -25,6 +25,7 @@ async def lifespan(app: FastAPI):
     yield
     await redis_manager.close()
 
+
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(router_auth)

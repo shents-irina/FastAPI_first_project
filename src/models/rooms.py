@@ -20,7 +20,6 @@ class RoomsORM(Base):
     quantity: Mapped[int]
 
     facilities: Mapped[list["FacilitiesORM"]] = relationship(
-        back_populates="rooms",
-        secondary="rooms_facilities"
+        back_populates="rooms", secondary="rooms_facilities"
     )
     hotel: Mapped["HotelsORM"] = relationship()

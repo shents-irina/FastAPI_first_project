@@ -3,23 +3,21 @@ import pytest
 from tests.conftest import get_db_null_pool
 
 
-@pytest.mark.parametrize("room_id, date_from, date_to, status_code", [
-    (1, "2026-08-01", "2026-08-05", 200),
-    (1, "2026-08-02", "2026-08-05", 200),
-    (1, "2026-08-01", "2026-08-04", 200),
-    (1, "2026-08-01", "2026-08-03", 200),
-    (1, "2026-08-01", "2026-08-02", 200),
-    (1, "2026-08-03", "2026-08-05", 409),
-    (1, "2026-08-05", "2026-08-10", 200),
-])
+@pytest.mark.parametrize(
+    "room_id, date_from, date_to, status_code",
+    [
+        (1, "2026-08-01", "2026-08-05", 200),
+        (1, "2026-08-02", "2026-08-05", 200),
+        (1, "2026-08-01", "2026-08-04", 200),
+        (1, "2026-08-01", "2026-08-03", 200),
+        (1, "2026-08-01", "2026-08-02", 200),
+        (1, "2026-08-03", "2026-08-05", 409),
+        (1, "2026-08-05", "2026-08-10", 200),
+    ],
+)
 async def test_add_booking(db, authenticated_ac, room_id, date_from, date_to, status_code):
     response = await authenticated_ac.post(
-        url="/bookings",
-        json={
-            "room_id": room_id,
-            "date_from": date_from,
-            "date_to": date_to
-        }
+        url="/bookings", json={"room_id": room_id, "date_from": date_from, "date_to": date_to}
     )
     assert response.status_code == status_code
     if status_code == 200:
@@ -36,11 +34,14 @@ async def delete_all_bookings():
         await _db.commit()
 
 
-@pytest.mark.parametrize("room_id, date_from, date_to, quantity_bookings", [
-    (1, "2026-08-01", "2026-08-05", 1),
-    (1, "2026-08-01", "2026-08-05", 2),
-    (1, "2026-08-01", "2026-08-05", 3),
-])
+@pytest.mark.parametrize(
+    "room_id, date_from, date_to, quantity_bookings",
+    [
+        (1, "2026-08-01", "2026-08-05", 1),
+        (1, "2026-08-01", "2026-08-05", 2),
+        (1, "2026-08-01", "2026-08-05", 3),
+    ],
+)
 async def test_add_and_get_bookings(
     room_id,
     date_from,
@@ -50,12 +51,7 @@ async def test_add_and_get_bookings(
     authenticated_ac,
 ):
     response = await authenticated_ac.post(
-        url="/bookings",
-        json={
-            "room_id": room_id,
-            "date_from": date_from,
-            "date_to": date_to
-        }
+        url="/bookings", json={"room_id": room_id, "date_from": date_from, "date_to": date_to}
     )
     assert response.status_code == 200
 

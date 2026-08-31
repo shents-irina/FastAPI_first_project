@@ -17,22 +17,21 @@ router = APIRouter(prefix="/hotels", tags=["Номера"])
 async def get_rooms(
     db: DBDep,
     hotel_id: int,
-    date_from: date = Query(openapi_examples={"example1": {"summary": "Пример даты заезда", "value": "2026-07-07"}}),
-    date_to: date = Query(openapi_examples={"example1": {"summary": "Пример даты выезда", "value": "2026-08-12"}}),
+    date_from: date = Query(
+        openapi_examples={"example1": {"summary": "Пример даты заезда", "value": "2026-07-07"}}
+    ),
+    date_to: date = Query(
+        openapi_examples={"example1": {"summary": "Пример даты выезда", "value": "2026-08-12"}}
+    ),
 ):
-    return await db.rooms.get_filtered_by_time(hotel_id=hotel_id, date_from=date_from, date_to=date_to)
+    return await db.rooms.get_filtered_by_time(
+        hotel_id=hotel_id, date_from=date_from, date_to=date_to
+    )
 
 
-@router.get(
-    path="/{hotel_id}/rooms/{room_id}",
-    summary="Получение конкретного номера отеля"
-)
+@router.get(path="/{hotel_id}/rooms/{room_id}", summary="Получение конкретного номера отеля")
 @cache(expire=60)
-async def get_room(
-    db: DBDep,
-    hotel_id: int,
-    room_id: int
-):
+async def get_room(db: DBDep, hotel_id: int, room_id: int):
     return await db.rooms.get_one_or_none_with_rels(hotel_id=hotel_id, id=room_id)
 
 
@@ -46,20 +45,25 @@ async def create_room(
     hotel_id: int,
     room_data: RoomAddRequest = Body(
         openapi_examples={
-            "1": {"summary": "Пример данных номера", "value": {
-                "title": "Комфорт",
-                "description": "Номер с видом на море",
-                "price": 5000,
-                "quantity": 5,
-                "facilities_ids": [2, 3]
-            }}
+            "1": {
+                "summary": "Пример данных номера",
+                "value": {
+                    "title": "Комфорт",
+                    "description": "Номер с видом на море",
+                    "price": 5000,
+                    "quantity": 5,
+                    "facilities_ids": [2, 3],
+                },
+            }
         }
-    )
+    ),
 ):
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
     room = await db.rooms.add(_room_data)
 
-    rooms_facilities_data = [RoomFacilityAdd(room_id=room.id, facility_id=f_id) for f_id in room_data.facilities_ids]
+    rooms_facilities_data = [
+        RoomFacilityAdd(room_id=room.id, facility_id=f_id) for f_id in room_data.facilities_ids
+    ]
     await db.rooms_facilities.add_bulk(rooms_facilities_data)
     await db.commit()
 
@@ -78,8 +82,10 @@ async def edit_room(
     room_data: RoomAddRequest,
 ):
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
-    await db.rooms.edit(_room_data, id=room_id, hotel_id=hotel_id )
-    await db.rooms_facilities.set_room_facilities(room_id=room_id, facilities_ids=room_data.facilities_ids)
+    await db.rooms.edit(_room_data, id=room_id, hotel_id=hotel_id)
+    await db.rooms_facilities.set_room_facilities(
+        room_id=room_id, facilities_ids=room_data.facilities_ids
+    )
     await db.commit()
     return {"status": "OK"}
 
@@ -99,7 +105,9 @@ async def partial_edit_room(
     _room_data = RoomPatch(hotel_id=hotel_id, **_room_data_dict)
     await db.rooms.edit(_room_data, exclude_unset=True, id=room_id, hotel_id=hotel_id)
     if "facilities_ids" in _room_data_dict:
-        await db.rooms_facilities.set_room_facilities(room_id=room_id, facilities_ids=_room_data_dict["facilities_ids"])
+        await db.rooms_facilities.set_room_facilities(
+            room_id=room_id, facilities_ids=_room_data_dict["facilities_ids"]
+        )
     await db.commit()
     return {"status": "OK"}
 
