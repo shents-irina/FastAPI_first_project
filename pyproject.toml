@@ -4,7 +4,17 @@ requires-python = ">=3.13"
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Query", "fastapi.Body", "fastapi.Depends", "fastapi.Path"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = ["src", "tests"]
+exclude = ["src/migrations", "**/__pycache__"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+env_files = [".env-test"]
+asyncio_mode = "auto"
