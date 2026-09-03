@@ -25,7 +25,10 @@ def get_token(request: Request) -> str:
 
 def get_current_user_id(token: str = Depends(get_token)) -> int:
     data = AuthService().decode_token(token)
-    return data.get("user_id")
+    user_id = data.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Некорректный токен доступа")
+    return user_id
 
 
 UserIdDep = Annotated[int, Depends(get_current_user_id)]
