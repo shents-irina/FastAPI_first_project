@@ -3,14 +3,15 @@ from sqlalchemy import delete, insert, select
 from models.facilities import FacilitiesORM, RoomsFacilitiesORM
 from repositories.base import BaseRepository
 from repositories.mappers.mappers import FacilityDataMapper, RoomFacilityDataMapper
+from schemas.facilities import Facility, RoomFacility
 
 
-class FacilitiesRepository(BaseRepository):
+class FacilitiesRepository(BaseRepository[FacilitiesORM, Facility]):
     model = FacilitiesORM
     mapper = FacilityDataMapper
 
 
-class RoomsFacilitiesRepository(BaseRepository):
+class RoomsFacilitiesRepository(BaseRepository[RoomsFacilitiesORM, RoomFacility]):
     model = RoomsFacilitiesORM
     mapper = RoomFacilityDataMapper
 

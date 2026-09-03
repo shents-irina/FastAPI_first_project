@@ -13,4 +13,4 @@ def upload_image(file: UploadFile):
     with open(image_path, "wb+") as new_file:
         shutil.copyfileobj(file.file, new_file)
 
-    resize_image.delay(image_path)
+    resize_image.delay(image_path)  # pyright: ignore[reportFunctionMemberAccess]  # celery добавляет .delay в рантайме

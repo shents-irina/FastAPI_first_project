@@ -9,10 +9,10 @@ from models.rooms import RoomsORM
 from repositories.base import BaseRepository
 from repositories.mappers.mappers import BookingDataMapper
 from repositories.utils import rooms_ids_for_booking
-from schemas.bookings import BookingAdd
+from schemas.bookings import Booking, BookingAdd
 
 
-class BookingsRepository(BaseRepository):
+class BookingsRepository(BaseRepository[BookingsORM, Booking]):
     model = BookingsORM
     mapper = BookingDataMapper
 

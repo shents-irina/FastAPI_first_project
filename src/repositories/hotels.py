@@ -10,7 +10,7 @@ from repositories.utils import rooms_ids_for_booking
 from schemas.hotels import Hotel
 
 
-class HotelsRepository(BaseRepository):
+class HotelsRepository(BaseRepository[HotelsORM, Hotel]):
     model = HotelsORM
     mapper = HotelDataMapper
 

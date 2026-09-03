@@ -4,10 +4,10 @@ from sqlalchemy import select
 from models.users import UsersORM
 from repositories.base import BaseRepository
 from repositories.mappers.mappers import UserDataMapper
-from schemas.users import UserWithHashedPassword
+from schemas.users import User, UserWithHashedPassword
 
 
-class UsersRepository(BaseRepository):
+class UsersRepository(BaseRepository[UsersORM, User]):
     model = UsersORM
     mapper = UserDataMapper
 

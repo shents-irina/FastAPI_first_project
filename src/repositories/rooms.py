@@ -7,9 +7,10 @@ from models.rooms import RoomsORM
 from repositories.base import BaseRepository
 from repositories.mappers.mappers import RoomDataMapper, RoomWithRelsDataMapper
 from repositories.utils import rooms_ids_for_booking
+from schemas.rooms import Room
 
 
-class RoomsRepository(BaseRepository):
+class RoomsRepository(BaseRepository[RoomsORM, Room]):
     model = RoomsORM
     mapper = RoomDataMapper
 
