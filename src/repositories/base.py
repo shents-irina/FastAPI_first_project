@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+import logging
 
 import sqlalchemy.exc
 from asyncpg.exceptions import UniqueViolationError
@@ -8,6 +9,8 @@ from sqlalchemy import delete, insert, select, update
 from database import Base
 from exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
 from repositories.mappers.base import DataMapper
+
+logger = logging.getLogger(__name__)
 
 
 class BaseRepository[ModelType: Base, SchemaType: BaseModel]:
@@ -48,9 +51,11 @@ class BaseRepository[ModelType: Base, SchemaType: BaseModel]:
             result = await self.session.execute(add_data_stmt)
             model = result.scalars().one()
         except sqlalchemy.exc.IntegrityError as exc:
-            if isinstance(exc.orig.__cause__, UniqueViolationError):
+            if exc.orig is not None and isinstance(exc.orig.__cause__, UniqueViolationError):
+                logger.warning("Попытка добавить уже существующую запись: %s", exc.orig)
                 raise ObjectAlreadyExistsException from exc
             else:
+                logger.exception("Не удалось добавить данные в БД: неизвестная ошибка целостности")
                 raise
         return self.mapper.map_to_domain_entity(model)
 
