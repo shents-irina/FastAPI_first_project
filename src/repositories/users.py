@@ -1,6 +1,7 @@
 from pydantic import EmailStr
 from sqlalchemy import select
 
+from exceptions import ObjectNotFoundException
 from models.users import UsersORM
 from repositories.base import BaseRepository
 from repositories.mappers.mappers import UserDataMapper
@@ -13,8 +14,9 @@ class UsersRepository(BaseRepository[UsersORM, User]):
 
     async def get_user_with_hashed_password(self, email: EmailStr):
         query = select(self.model).filter_by(email=email)
-        result = await self.session.execute(query)
-        model = result.scalars().one_or_none()
-        if model is None:
-            return None
+        try:
+            result = await self.session.execute(query)
+            model = result.scalars().one_or_none()
+        except AttributeError as exc:
+            raise ObjectNotFoundException from exc
         return UserWithHashedPassword.model_validate(model, from_attributes=True)

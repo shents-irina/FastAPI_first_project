@@ -1,9 +1,12 @@
 from collections.abc import Sequence
 
+import sqlalchemy.exc
+from asyncpg.exceptions import UniqueViolationError
 from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
 
 from database import Base
+from exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
 from repositories.mappers.base import DataMapper
 
 
@@ -30,10 +33,25 @@ class BaseRepository[ModelType: Base, SchemaType: BaseModel]:
             return None
         return self.mapper.map_to_domain_entity(model)
 
+    async def get_one(self, **filter_by) -> SchemaType:
+        query = select(self.model).filter_by(**filter_by)
+        result = await self.session.execute(query)
+        try:
+            model = result.scalar_one()
+        except sqlalchemy.exc.NoResultFound:
+            raise ObjectNotFoundException
+        return self.mapper.map_to_domain_entity(model)
+
     async def add(self, data: BaseModel) -> SchemaType:
         add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
-        result = await self.session.execute(add_data_stmt)
-        model = result.scalars().one()
+        try:
+            result = await self.session.execute(add_data_stmt)
+            model = result.scalars().one()
+        except sqlalchemy.exc.IntegrityError as exc:
+            if isinstance(exc.orig.__cause__, UniqueViolationError):
+                raise ObjectAlreadyExistsException from exc
+            else:
+                raise
         return self.mapper.map_to_domain_entity(model)
 
     async def add_bulk(self, data: Sequence[BaseModel]) -> None:
