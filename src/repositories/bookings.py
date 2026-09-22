@@ -1,9 +1,9 @@
 from datetime import UTC, datetime
 
-from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
+from exceptions import AllRoomsAreBookedException
 from models.bookings import BookingsORM
 from models.rooms import RoomsORM
 from repositories.base import BaseRepository
@@ -40,4 +40,4 @@ class BookingsRepository(BaseRepository[BookingsORM, Booking]):
             new_booking = await self.add(data)
             return new_booking
         else:
-            raise HTTPException(status_code=409, detail="Нет свободных номеров на выбранные даты")
+            raise AllRoomsAreBookedException

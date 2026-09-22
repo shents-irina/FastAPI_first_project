@@ -1,12 +1,20 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from api.dependencies import DBDep, UserIdDep
 from exceptions import (
     AllRoomsAreBookedException,
-    ObjectNotFoundException,
+    AllRoomsAreBookedHTTPException,
+    BookingAlreadyStartedException,
+    BookingAlreadyStartedHTTPException,
+    BookingNotFoundException,
+    BookingNotFoundHTTPException,
+    CheckOutBeforeCheckInException,
+    CheckOutBeforeCheckInHTTPException,
+    RoomNotFoundException,
     RoomNotFoundHTTPException,
 )
-from schemas.bookings import BookingAdd, BookingAddRequest
+from schemas.bookings import BookingAddRequest
+from services.bookings import BookingService
 
 router = APIRouter(prefix="/bookings", tags=["Бронирования"])
 
@@ -15,7 +23,7 @@ router = APIRouter(prefix="/bookings", tags=["Бронирования"])
 async def get_bookings(
     db: DBDep,
 ):
-    return await db.bookings.get_all()
+    return await BookingService(db).get_bookings()
 
 
 @router.get(path="/me", summary="Получение своих бронирований")
@@ -23,21 +31,28 @@ async def get_my_bookings(
     user_id: UserIdDep,
     db: DBDep,
 ):
-    return await db.bookings.get_filtered(user_id=user_id)
+    return await BookingService(db).get_my_bookings(user_id)
 
 
 @router.post(path="", summary="Бронирование номера отеля")
 async def add_booking(db: DBDep, user_id: UserIdDep, booking_data: BookingAddRequest):
     try:
-        room = await db.rooms.get_one(id=booking_data.room_id)
-    except ObjectNotFoundException:
-        raise RoomNotFoundHTTPException
-    room_price: int = room.price
-    hotel_id: int = room.hotel_id
-    _booking_data = BookingAdd(**booking_data.model_dump(), user_id=user_id, price=room_price)
-    try:
-        booking = await db.bookings.add_booking(_booking_data, hotel_id=hotel_id)
+        booking = await BookingService(db).add_booking(user_id, booking_data)
+    except RoomNotFoundException as exc:
+        raise RoomNotFoundHTTPException from exc
+    except CheckOutBeforeCheckInException as exc:
+        raise CheckOutBeforeCheckInHTTPException from exc
     except AllRoomsAreBookedException as exc:
-        raise HTTPException(status_code=409, detail=exc.detail)
-    await db.commit()
+        raise AllRoomsAreBookedHTTPException from exc
     return {"status": "OK", "data": booking}
+
+
+@router.delete("/{booking_id}", summary="Удаление бронирования номера")
+async def delete_booking(db: DBDep, user_id: UserIdDep, booking_id: int):
+    try:
+        await BookingService(db).delete_booking(user_id, booking_id)
+    except BookingNotFoundException as exc:
+        raise BookingNotFoundHTTPException from exc
+    except BookingAlreadyStartedException as exc:
+        raise BookingAlreadyStartedHTTPException from exc
+    return {"status": "OK"}

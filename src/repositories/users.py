@@ -1,3 +1,4 @@
+import sqlalchemy.exc
 from pydantic import EmailStr
 from sqlalchemy import select
 
@@ -16,7 +17,7 @@ class UsersRepository(BaseRepository[UsersORM, User]):
         query = select(self.model).filter_by(email=email)
         try:
             result = await self.session.execute(query)
-            model = result.scalars().one_or_none()
-        except AttributeError as exc:
+            model = result.scalar_one()
+        except sqlalchemy.exc.NoResultFound as exc:
             raise ObjectNotFoundException from exc
         return UserWithHashedPassword.model_validate(model, from_attributes=True)

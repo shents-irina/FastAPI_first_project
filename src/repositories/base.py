@@ -1,13 +1,13 @@
-from collections.abc import Sequence
 import logging
+from collections.abc import Sequence
 
 import sqlalchemy.exc
-from asyncpg.exceptions import UniqueViolationError
+from asyncpg.exceptions import ForeignKeyViolationError, UniqueViolationError
 from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
 
 from database import Base
-from exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
+from exceptions import ObjectAlreadyExistsException, ObjectIsInUseException, ObjectNotFoundException
 from repositories.mappers.base import DataMapper
 
 logger = logging.getLogger(__name__)
@@ -41,8 +41,8 @@ class BaseRepository[ModelType: Base, SchemaType: BaseModel]:
         result = await self.session.execute(query)
         try:
             model = result.scalar_one()
-        except sqlalchemy.exc.NoResultFound:
-            raise ObjectNotFoundException
+        except sqlalchemy.exc.NoResultFound as exc:
+            raise ObjectNotFoundException from exc
         return self.mapper.map_to_domain_entity(model)
 
     async def add(self, data: BaseModel) -> SchemaType:
@@ -73,4 +73,12 @@ class BaseRepository[ModelType: Base, SchemaType: BaseModel]:
 
     async def delete(self, *filter, **filter_by) -> None:
         delete_stmt = delete(self.model).filter(*filter).filter_by(**filter_by)
-        await self.session.execute(delete_stmt)
+        try:
+            await self.session.execute(delete_stmt)
+        except sqlalchemy.exc.IntegrityError as exc:
+            if exc.orig is not None and isinstance(exc.orig.__cause__, ForeignKeyViolationError):
+                logger.warning("Попытка удалить объект, на который есть ссылки: %s", exc.orig)
+                raise ObjectIsInUseException from exc
+            else:
+                logger.exception("Не удалось удалить данные из БД: неизвестная ошибка целостности")
+                raise
