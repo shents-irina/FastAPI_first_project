@@ -1,7 +1,9 @@
 from datetime import date
 
 from exceptions import (
+    HotelAlreadyExistsException,
     HotelNotFoundException,
+    ObjectAlreadyExistsException,
     ObjectNotFoundException,
     check_date_to_after_date_from,
 )
@@ -38,18 +40,27 @@ class HotelService(BaseService):
         return hotels
 
     async def add_hotel(self, hotel_data: HotelAdd):
-        hotel = await self.db.hotels.add(hotel_data)
+        try:
+            hotel = await self.db.hotels.add(hotel_data)
+        except ObjectAlreadyExistsException as exc:
+            raise HotelAlreadyExistsException from exc
         await self.db.commit()
         return hotel
 
     async def edit_hotel(self, hotel_id: int, hotel_data: HotelAdd):
         await self.get_hotel_with_check(hotel_id)
-        await self.db.hotels.edit(hotel_data, id=hotel_id)
+        try:
+            await self.db.hotels.edit(hotel_data, id=hotel_id)
+        except ObjectAlreadyExistsException as exc:
+            raise HotelAlreadyExistsException from exc
         await self.db.commit()
 
     async def edit_hotel_partially(self, hotel_id: int, hotel_data: HotelPatch):
         await self.get_hotel_with_check(hotel_id)
-        await self.db.hotels.edit(hotel_data, exclude_unset=True, id=hotel_id)
+        try:
+            await self.db.hotels.edit(hotel_data, exclude_unset=True, id=hotel_id)
+        except ObjectAlreadyExistsException as exc:
+            raise HotelAlreadyExistsException from exc
         await self.db.commit()
 
     async def delete_hotel(self, hotel_id: int):

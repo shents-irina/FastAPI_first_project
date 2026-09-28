@@ -7,6 +7,8 @@ from api.dependencies import DBDep, PaginationDep
 from exceptions import (
     CheckOutBeforeCheckInException,
     CheckOutBeforeCheckInHTTPException,
+    HotelAlreadyExistsException,
+    HotelAlreadyExistsHTTPException,
     HotelNotFoundException,
     HotelNotFoundHTTPException,
     ObjectIsInUseException,
@@ -72,8 +74,10 @@ async def create_hotel(
         }
     ),
 ):
-
-    hotel = await HotelService(db).add_hotel(hotel_data)
+    try:
+        hotel = await HotelService(db).add_hotel(hotel_data)
+    except HotelAlreadyExistsException as exc:
+        raise HotelAlreadyExistsHTTPException from exc
     return {"status": "OK", "data": hotel}
 
 
@@ -87,6 +91,8 @@ async def edit_hotel(db: DBDep, hotel_id: int, hotel_data: HotelAdd):
         await HotelService(db).edit_hotel(hotel_id, hotel_data)
     except HotelNotFoundException as exc:
         raise HotelNotFoundHTTPException from exc
+    except HotelAlreadyExistsException as exc:
+        raise HotelAlreadyExistsHTTPException from exc
     return {"status": "OK"}
 
 
@@ -100,6 +106,8 @@ async def partial_edit(db: DBDep, hotel_id: int, hotel_data: HotelPatch):
         await HotelService(db).edit_hotel_partially(hotel_id, hotel_data)
     except HotelNotFoundException as exc:
         raise HotelNotFoundHTTPException from exc
+    except HotelAlreadyExistsException as exc:
+        raise HotelAlreadyExistsHTTPException from exc
     return {"status": "OK"}
 
 

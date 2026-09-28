@@ -7,10 +7,14 @@ from api.dependencies import DBDep
 from exceptions import (
     CheckOutBeforeCheckInException,
     CheckOutBeforeCheckInHTTPException,
+    FacilityNotFoundException,
+    FacilityNotFoundHTTPException,
     HotelNotFoundException,
     HotelNotFoundHTTPException,
     ObjectIsInUseException,
     ObjectIsInUseHTTPException,
+    RoomAlreadyExistsException,
+    RoomAlreadyExistsHTTPException,
     RoomNotFoundException,
     RoomNotFoundHTTPException,
 )
@@ -80,6 +84,10 @@ async def create_room(
         room = await RoomService(db).create_room(hotel_id, room_data)
     except HotelNotFoundException as exc:
         raise HotelNotFoundHTTPException from exc
+    except RoomAlreadyExistsException as exc:
+        raise RoomAlreadyExistsHTTPException from exc
+    except FacilityNotFoundException as exc:
+        raise FacilityNotFoundHTTPException from exc
 
     return {"status": "OK", "data": room}
 
@@ -101,6 +109,10 @@ async def edit_room(
         raise HotelNotFoundHTTPException from exc
     except RoomNotFoundException as exc:
         raise RoomNotFoundHTTPException from exc
+    except RoomAlreadyExistsException as exc:
+        raise RoomAlreadyExistsHTTPException from exc
+    except FacilityNotFoundException as exc:
+        raise FacilityNotFoundHTTPException from exc
 
     return {"status": "OK"}
 
@@ -122,6 +134,10 @@ async def partial_edit_room(
         raise HotelNotFoundHTTPException from exc
     except RoomNotFoundException as exc:
         raise RoomNotFoundHTTPException from exc
+    except RoomAlreadyExistsException as exc:
+        raise RoomAlreadyExistsHTTPException from exc
+    except FacilityNotFoundException as exc:
+        raise FacilityNotFoundHTTPException from exc
 
     return {"status": "OK"}
 

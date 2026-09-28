@@ -6,6 +6,8 @@ from exceptions import (
     AllRoomsAreBookedHTTPException,
     BookingAlreadyStartedException,
     BookingAlreadyStartedHTTPException,
+    BookingDateInPastException,
+    BookingDateInPastHTTPException,
     BookingNotFoundException,
     BookingNotFoundHTTPException,
     CheckOutBeforeCheckInException,
@@ -42,6 +44,8 @@ async def add_booking(db: DBDep, user_id: UserIdDep, booking_data: BookingAddReq
         raise RoomNotFoundHTTPException from exc
     except CheckOutBeforeCheckInException as exc:
         raise CheckOutBeforeCheckInHTTPException from exc
+    except BookingDateInPastException as exc:
+        raise BookingDateInPastHTTPException from exc
     except AllRoomsAreBookedException as exc:
         raise AllRoomsAreBookedHTTPException from exc
     return {"status": "OK", "data": booking}

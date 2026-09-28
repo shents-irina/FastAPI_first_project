@@ -48,16 +48,24 @@ class BookingNotFoundException(ObjectNotFoundException):
     detail = "Бронирование не найдено"
 
 
+class FacilityNotFoundException(ObjectNotFoundException):
+    detail = "Удобство не найдено"
+
+
 class ObjectAlreadyExistsException(AppException):
     detail = "Похожий объект уже существует"
 
 
-# class HotelAlreadyExistsException(ObjectAlreadyExistsException):
-#     detail = "Похожий отель уже существует"
+class HotelAlreadyExistsException(ObjectAlreadyExistsException):
+    detail = "Похожий отель уже существует"
 
 
-# class RoomAlreadyExistsException(ObjectAlreadyExistsException):
-#     detail = "Похожий номер уже существует"
+class RoomAlreadyExistsException(ObjectAlreadyExistsException):
+    detail = "Похожий номер уже существует"
+
+
+class FacilityAlreadyExistsException(ObjectAlreadyExistsException):
+    detail = "Похожее удобство уже существует"
 
 
 class UserAlreadyExistsException(ObjectAlreadyExistsException):
@@ -80,6 +88,10 @@ class BookingAlreadyStartedException(AppException):
     detail = "Нельзя отменить бронирование после даты заезда"
 
 
+class BookingDateInPastException(AppException):
+    detail = "Нельзя забронировать номер на прошедшую дату"
+
+
 def check_date_to_after_date_from(date_from: date, date_to: date) -> None:
     if date_to <= date_from:
         raise CheckOutBeforeCheckInException()
@@ -88,6 +100,11 @@ def check_date_to_after_date_from(date_from: date, date_to: date) -> None:
 def check_booking_not_started(date_from: date) -> None:
     if date_from <= datetime.now(tz=UTC).date():
         raise BookingAlreadyStartedException()
+
+
+def check_booking_not_in_past(date_from: date) -> None:
+    if date_from < datetime.now(tz=UTC).date():
+        raise BookingDateInPastException()
 
 
 class AppHTTPException(HTTPException):
@@ -140,17 +157,25 @@ class BookingNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Бронирование не найдено"
 
 
+class FacilityNotFoundHTTPException(ObjectNotFoundHTTPException):
+    detail = "Удобство не найдено"
+
+
 class ObjectAlreadyExistsHTTPException(AppHTTPException):
     status_code = 409
     detail = "Похожий объект уже существует"
 
 
-# class HotelAlreadyExistsHTTPException(ObjectAlreadyExistsHTTPException):
-#     detail = "Похожий отель уже существует"
+class HotelAlreadyExistsHTTPException(ObjectAlreadyExistsHTTPException):
+    detail = "Похожий отель уже существует"
 
 
-# class RoomAlreadyExistsHTTPException(ObjectAlreadyExistsHTTPException):
-#     detail = "Похожий номер уже существует"
+class RoomAlreadyExistsHTTPException(ObjectAlreadyExistsHTTPException):
+    detail = "Похожий номер уже существует"
+
+
+class FacilityAlreadyExistsHTTPException(ObjectAlreadyExistsHTTPException):
+    detail = "Похожее удобство уже существует"
 
 
 class UserAlreadyExistsHTTPException(ObjectAlreadyExistsHTTPException):
@@ -175,3 +200,8 @@ class CheckOutBeforeCheckInHTTPException(AppHTTPException):
 class BookingAlreadyStartedHTTPException(AppHTTPException):
     status_code = 409
     detail = "Нельзя отменить бронирование после даты заезда"
+
+
+class BookingDateInPastHTTPException(AppHTTPException):
+    status_code = 422
+    detail = "Нельзя забронировать номер на прошедшую дату"

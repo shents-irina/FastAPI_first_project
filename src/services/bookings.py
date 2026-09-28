@@ -1,6 +1,7 @@
 from exceptions import (
     BookingNotFoundException,
     ObjectNotFoundException,
+    check_booking_not_in_past,
     check_booking_not_started,
     check_date_to_after_date_from,
 )
@@ -25,6 +26,7 @@ class BookingService(BaseService):
     async def add_booking(self, user_id: int, booking_data: BookingAddRequest):
         room = await RoomService(self.db).get_room_with_check(room_id=booking_data.room_id)
         check_date_to_after_date_from(booking_data.date_from, booking_data.date_to)
+        check_booking_not_in_past(booking_data.date_from)
 
         room_price: int = room.price
         hotel_id: int = room.hotel_id

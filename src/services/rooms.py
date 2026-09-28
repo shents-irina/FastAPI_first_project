@@ -1,6 +1,13 @@
 from datetime import date
 
-from exceptions import ObjectNotFoundException, RoomNotFoundException, check_date_to_after_date_from
+from exceptions import (
+    FacilityNotFoundException,
+    ObjectAlreadyExistsException,
+    ObjectNotFoundException,
+    RoomAlreadyExistsException,
+    RoomNotFoundException,
+    check_date_to_after_date_from,
+)
 from schemas.facilities import RoomFacilityAdd
 from schemas.rooms import Room, RoomAdd, RoomAddRequest, RoomPatch, RoomPatchRequest
 from services.base import BaseService
@@ -31,12 +38,18 @@ class RoomService(BaseService):
     async def create_room(self, hotel_id: int, room_data: RoomAddRequest):
         await HotelService(self.db).get_hotel_with_check(hotel_id)
         _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
-        room = await self.db.rooms.add(_room_data)
+        try:
+            room = await self.db.rooms.add(_room_data)
+        except ObjectAlreadyExistsException as exc:
+            raise RoomAlreadyExistsException from exc
 
         rooms_facilities_data = [
             RoomFacilityAdd(room_id=room.id, facility_id=f_id) for f_id in room_data.facilities_ids
         ]
-        await self.db.rooms_facilities.add_bulk(rooms_facilities_data)
+        try:
+            await self.db.rooms_facilities.add_bulk(rooms_facilities_data)
+        except ObjectNotFoundException as exc:
+            raise FacilityNotFoundException from exc
         await self.db.commit()
 
         return room
@@ -46,10 +59,16 @@ class RoomService(BaseService):
         await self.get_room_with_check(room_id)
 
         _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
-        await self.db.rooms.edit(_room_data, id=room_id, hotel_id=hotel_id)
-        await self.db.rooms_facilities.set_room_facilities(
-            room_id=room_id, facilities_ids=room_data.facilities_ids
-        )
+        try:
+            await self.db.rooms.edit(_room_data, id=room_id, hotel_id=hotel_id)
+        except ObjectAlreadyExistsException as exc:
+            raise RoomAlreadyExistsException from exc
+        try:
+            await self.db.rooms_facilities.set_room_facilities(
+                room_id=room_id, facilities_ids=room_data.facilities_ids
+            )
+        except ObjectNotFoundException as exc:
+            raise FacilityNotFoundException from exc
         await self.db.commit()
         return {"status": "OK"}
 
@@ -59,11 +78,18 @@ class RoomService(BaseService):
 
         _room_data_dict = room_data.model_dump(exclude_unset=True)
         _room_data = RoomPatch(hotel_id=hotel_id, **_room_data_dict)
-        await self.db.rooms.edit(_room_data, exclude_unset=True, id=room_id, hotel_id=hotel_id)
+        try:
+            await self.db.rooms.edit(_room_data, exclude_unset=True, id=room_id, hotel_id=hotel_id)
+        except ObjectAlreadyExistsException as exc:
+            raise RoomAlreadyExistsException from exc
+
         if "facilities_ids" in _room_data_dict:
-            await self.db.rooms_facilities.set_room_facilities(
-                room_id=room_id, facilities_ids=_room_data_dict["facilities_ids"]
-            )
+            try:
+                await self.db.rooms_facilities.set_room_facilities(
+                    room_id=room_id, facilities_ids=_room_data_dict["facilities_ids"]
+                )
+            except ObjectNotFoundException as exc:
+                raise FacilityNotFoundException from exc
         await self.db.commit()
 
     async def delete_room(self, hotel_id: int, room_id: int):
