@@ -30,7 +30,7 @@ def check_test_mode():
     assert settings.MODE == "TEST"
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 async def db() -> AsyncGenerator[DBManager]:
     async for db in get_db_null_pool():
         yield db
@@ -65,7 +65,8 @@ async def register_user(setup_database, ac):
 
 
 @pytest.fixture(scope="session")
-async def authenticated_ac(register_user, ac):
-    await ac.post(url="/auth/login", json={"email": "kot@pes.com", "password": "1234"})
-    assert ac.cookies["access_token"]
-    yield ac
+async def authenticated_ac(register_user) -> AsyncGenerator[AsyncClient]:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        await client.post(url="/auth/login", json={"email": "kot@pes.com", "password": "1234"})
+        assert client.cookies["access_token"]
+        yield client

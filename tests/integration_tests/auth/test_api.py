@@ -39,3 +39,21 @@ async def test_auth_flow(email: str, password: str, status_code: int, ac):
     logout_response = await ac.post(url="/auth/logout")
     assert logout_response.status_code == 200
     assert "access_token" not in ac.cookies
+
+
+async def test_login_with_wrong_password_returns_401(ac):
+    email = "wrongpass@pes.com"
+    await ac.post(url="/auth/register", json={"email": email, "password": "correct-password"})
+
+    response = await ac.post(url="/auth/login", json={"email": email, "password": "wrong-password"})
+    assert response.status_code == 401
+    assert "access_token" not in ac.cookies
+
+
+async def test_login_with_unregistered_email_returns_401(ac):
+    response = await ac.post(
+        url="/auth/login",
+        json={"email": "unregistered@pes.com", "password": "1234"},
+    )
+    assert response.status_code == 401
+    assert "access_token" not in ac.cookies
