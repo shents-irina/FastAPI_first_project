@@ -8,15 +8,28 @@ from schemas.facilities import Facility, RoomFacility
 
 
 class FacilitiesRepository(BaseRepository[FacilitiesORM, Facility]):
+    """Репозиторий удобств."""
+
     model = FacilitiesORM
     mapper = FacilityDataMapper
 
 
 class RoomsFacilitiesRepository(BaseRepository[RoomsFacilitiesORM, RoomFacility]):
+    """Репозиторий связей между номерами и удобствами."""
+
     model = RoomsFacilitiesORM
     mapper = RoomFacilityDataMapper
 
     async def set_room_facilities(self, room_id: int, facilities_ids: set[int]) -> None:
+        """Приводит набор удобств номера к переданному.
+
+        Сравнивает текущие связи номера с ``facilities_ids``: Лишние связи удаляются, недостающие добавляются, неизменные остаются нетронутыми.
+        Пустой набор удаляет все связи номера.
+
+        :param room_id: Идентификатор номера.
+        :param facilities_ids: Идентификаторы удобств, которые должны остаться у номера.
+        :raises ObjectNotFoundException: Если указан идентификатор несуществующего номера или удобства.
+        """
         get_current_facilities_ids_query = select(self.model.facility_id).filter_by(room_id=room_id)
         result = await self.session.execute(get_current_facilities_ids_query)
         current_facilities_ids = set(result.scalars().all())

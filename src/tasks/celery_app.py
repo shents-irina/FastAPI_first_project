@@ -11,9 +11,10 @@ celery_instance = Celery(
     ],
 )
 
+# Расписание Celery beat: ежедневная рассылка напоминаний о заезде в 01:00 по UTC
 celery_instance.conf.beat_schedule = {
     "Напоминание о заезде": {
         "task": "booking_today_checkin",
-        "schedule": crontab(hour=8, minute=0),
+        "schedule": crontab(hour=1, minute=0),
     }
 }

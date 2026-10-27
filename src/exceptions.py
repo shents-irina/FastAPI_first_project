@@ -4,6 +4,11 @@ from fastapi import HTTPException
 
 
 class AppException(Exception):
+    """Базовое доменное исключение.
+
+    Текст по умолчанию задаётся атрибутом ``detail``.
+    """
+
     detail = "Неожиданная ошибка"
 
     def __init__(self, detail: str | None = None, *args):
@@ -93,21 +98,45 @@ class BookingDateInPastException(AppException):
 
 
 def check_date_to_after_date_from(date_from: date, date_to: date) -> None:
+    """Проверяет, что выезд строго позже заезда.
+
+    Минимальная продолжительность проживания - одна ночь.
+
+    :raises CheckOutBeforeCheckInException: Если ``date_to`` раньше ``date_from`` или совпадает с ней.
+    """
     if date_to <= date_from:
         raise CheckOutBeforeCheckInException()
 
 
 def check_booking_not_started(date_from: date) -> None:
+    """Проверяет, что день заезда еще не наступил.
+
+    Отмена бронирования разрешена только до дня заезда.
+    Текущая дата определяется по UTC.
+
+    :raises BookingAlreadyStartedException: Если дата заезда совпадает с текущей или находится в прошлом.
+    """
     if date_from <= datetime.now(tz=UTC).date():
         raise BookingAlreadyStartedException()
 
 
 def check_booking_not_in_past(date_from: date) -> None:
+    """Проверяет, что дата заезда не находится в прошлом.
+
+    Заезд разрешен на текущую или более позднюю дату.
+
+    :raises BookingDateInPastException: Если дата заезда раньше текущей даты по UTC.
+    """
     if date_from < datetime.now(tz=UTC).date():
         raise BookingDateInPastException()
 
 
 class AppHTTPException(HTTPException):
+    """Базовое HTTP-исключение.
+
+    Наследники задают код HTTP-статуса и сообщение атрибутами класса ``status_code`` и ``detail`` соответственно.
+    """
+
     status_code = 500
     detail = None
 

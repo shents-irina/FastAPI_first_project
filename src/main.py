@@ -3,9 +3,11 @@ import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import redis.exceptions as redis_exceptions
 import uvicorn
 from fastapi import FastAPI
 from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
 
 sys.path.append(str(Path(__file__).parent.parent))
@@ -30,10 +32,24 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await redis_manager.connect()
-    FastAPICache.init(RedisBackend(redis_manager.redis), prefix="fastapi-cache")
-    logger.info("FastAPI cache initialized")
+    """Управляет жизненным циклом приложения.
+
+    При запуске проверяет доступность Redis и использует его для кэширования ответов.
+    Если проверка завершается ошибкой ``RedisError``, использует ``InMemoryBackend``.
+    Выбор хранилища выполняется только при запуске приложения.
+    При остановке приложения подключение к Redis закрывается (если оно было открыто).
+    """
+    logger.info("Приложение запускается, MODE=%s", settings.MODE)
+    try:
+        await redis_manager.connect()
+        FastAPICache.init(RedisBackend(redis_manager.redis), prefix="fastapi-cache")
+        logger.info("Для кэширования используется Redis")
+    except redis_exceptions.RedisError:
+        FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
+        logger.info("Для кэширования используется InMemoryBackend, т.к. Redis недоступен")
+    logger.info("Кэш FastAPI инициализирован")
     yield
+    logger.info("Приложение останавливается")
     await redis_manager.close()
 
 

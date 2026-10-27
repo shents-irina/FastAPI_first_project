@@ -11,6 +11,8 @@ from schemas.hotels import Hotel
 
 
 class HotelsRepository(BaseRepository[HotelsORM, Hotel]):
+    """Репозиторий отелей."""
+
     model = HotelsORM
     mapper = HotelDataMapper
 
@@ -23,6 +25,22 @@ class HotelsRepository(BaseRepository[HotelsORM, Hotel]):
         offset,
         limit,
     ) -> list[Hotel]:
+        """Возвращает отели со свободными номерами на указанный период.
+
+        В выборку входят отели, где есть хотя бы один номер, свободный на период от ``date_from`` до ``date_to``.
+        Доступность номера определяет ``rooms_ids_for_booking``.
+
+        Фильтры ``title`` и ``location`` ищут подстроку без учёта регистра, пробелы по краям игнорируются.
+        Пустое значение или ``None`` отключает фильтр.
+
+        :param date_from: Начало периода.
+        :param date_to: Конец периода.
+        :param title: Часть названия отеля.
+        :param location: Часть адреса или местоположения отеля.
+        :param offset: Сколько отелей пропустить с начала выборки.
+        :param limit: Максимальное число отелей в результате.
+        :return: Список отелей или пустой список, если подходящих нет.
+        """
         rooms_ids_to_get = rooms_ids_for_booking(date_from=date_from, date_to=date_to)
         hotels_ids_to_get = (
             select(RoomsORM.hotel_id)

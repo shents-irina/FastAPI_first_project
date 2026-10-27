@@ -13,10 +13,18 @@ from schemas.bookings import Booking, BookingAdd
 
 
 class BookingsRepository(BaseRepository[BookingsORM, Booking]):
+    """Репозиторий бронирований."""
+
     model = BookingsORM
     mapper = BookingDataMapper
 
     async def get_bookings_with_today_checkin(self):
+        """Возвращает бронирования с заездом сегодня (по UTC) вместе с пользователем, номером и отелем.
+
+        Связанные объекты подгружаются сразу (``joinedload``).
+
+        :return: Список ORM-моделей ``BookingsORM``, а не Pydantic-схем. Если подходящих бронирований нет, то пустой список.
+        """
         query = (
             select(BookingsORM)
             .options(
@@ -29,6 +37,13 @@ class BookingsRepository(BaseRepository[BookingsORM, Booking]):
         return res.scalars().unique().all()
 
     async def add_booking(self, data: BookingAdd, hotel_id: int | None = None):
+        """Добавляет бронирование, если номер свободен на указанные даты.
+
+        :param data: Данные бронирования.
+        :param hotel_id: Идентификатор отеля, которым ограничивается выборка свободных номеров.
+        :return: Созданное бронирование в виде Pydantic-схемы.
+        :raises AllRoomsAreBookedException: Если номер ``data.room_id`` не входит в список свободных.
+        """
         rooms_ids_to_get = rooms_ids_for_booking(
             date_from=data.date_from, date_to=data.date_to, hotel_id=hotel_id
         )
