@@ -16,5 +16,9 @@ __pycache__
 # Служебные файлы macOS Finder
 .DS_Store
 
+# Загруженные пользователями картинки и их уменьшенные копии
+src/static/images/*
+!src/static/images/.gitkeep
+
 # Локальное состояние расписания Celery Beat
 celerybeat-schedule*
