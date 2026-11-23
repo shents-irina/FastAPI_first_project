@@ -1,4 +1,4 @@
-.PHONY: help run celery db-upgrade db-downgrade db-revision
+.PHONY: help run worker beat db-upgrade db-downgrade db-revision
 .DEFAULT_GOAL := help
 
 export PYTHONPATH := src
@@ -9,8 +9,11 @@ help: ## Показать список доступных команд с опи
 run: ## Запустить сервер разработки FastAPI (uvicorn) с автоперезагрузкой
 	uvicorn src.main:app --reload
 
-celery: ## Запустить воркер Celery для обработки фоновых задач
+worker: ## Запустить воркер Celery для обработки фоновых задач
 	celery --app=tasks.celery_app:celery_instance worker --loglevel=INFO
+
+beat: ## Запустить Celery Beat (планировщик периодических задач)
+	celery --app=tasks.celery_app:celery_instance beat --loglevel=INFO
 
 db-upgrade: ## Обновить базу данных до последней миграции
 	alembic upgrade head
